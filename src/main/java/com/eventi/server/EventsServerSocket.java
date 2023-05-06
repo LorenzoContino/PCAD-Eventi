@@ -3,7 +3,7 @@ package com.eventi.server;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class EventsServerSocket {
+public class EventsServerSocket implements Runnable{
     
     private ServerSocket socket;
 
@@ -26,6 +26,11 @@ public class EventsServerSocket {
         } catch (Exception e) {
             System.out.println("Server unable to create the socket: " + e.getMessage());
         }
+    }
+
+    @Override
+    public void run() {
+        start();
     }
 
 }
