@@ -1,7 +1,9 @@
 package com.eventi.calvino.calvino_exceptions;
 
-public class TopicAlreadyHasConsumerException extends IllegalArgumentException{
-     public TopicAlreadyHasConsumerException(String errorMessage){
+public class TopicAlreadyHasConsumerException extends TopicException{
+
+    public TopicAlreadyHasConsumerException(String errorMessage){
         super(errorMessage);
     } 
+
 }
