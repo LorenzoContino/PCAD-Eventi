@@ -3,8 +3,8 @@ package com.eventi.calvino;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.eventi.calvino.calvinoExceptions.TopicAlreadyHasConsumerException;
-import com.eventi.calvino.calvinoExceptions.TopicAlreadyHasProducerException;
+import com.eventi.calvino.calvino_exceptions.TopicAlreadyHasConsumerException;
+import com.eventi.calvino.calvino_exceptions.TopicAlreadyHasProducerException;
 
 public final class Calvino {
 

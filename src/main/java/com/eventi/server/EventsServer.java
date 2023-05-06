@@ -3,11 +3,14 @@ package com.eventi.server;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class EventsServerSocket implements Runnable{
+import com.eventi.gestione_eventi.Eventi;
+
+public class EventsServer{
     
     private ServerSocket socket;
 
     public void start(){
+        initMessageServer();
         while (!socket.isClosed()) {
             Socket client_socket;
             try {
@@ -20,7 +23,7 @@ public class EventsServerSocket implements Runnable{
         }
     }
 
-    public EventsServerSocket(int port) {
+    public EventsServer(int port) {
         try {    
             this.socket = new ServerSocket(port);
         } catch (Exception e) {
@@ -28,9 +31,14 @@ public class EventsServerSocket implements Runnable{
         }
     }
 
-    @Override
-    public void run() {
-        start();
+    private void initMessageServer(){
+        new Thread(new Eventi());
+    }
+
+
+    public static void main(String[] args) {
+        EventsServer server = new EventsServer(6000);
+        server.start();
     }
 
 }
