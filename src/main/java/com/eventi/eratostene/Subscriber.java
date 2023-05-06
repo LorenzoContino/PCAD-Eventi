@@ -1,5 +1,7 @@
 package com.eventi.eratostene;
 
+import com.eventi.messaggi.EventMessage;
+
 public abstract class Subscriber {
 
     private Topic myProducer;
@@ -31,13 +33,13 @@ public abstract class Subscriber {
         this.myProducer = null;
     }
 
-    public void produce(Integer number) {
+    public void produce(EventMessage number) {
         if (myProducer != null) {
             myProducer.getTopicData().add(number);
         }
     }
 
-    public Integer consume() {
+    public EventMessage consume() {
         if (myConsumer != null) {
             if (myConsumer.hasData()){
                 return myConsumer.getTopicData().poll();

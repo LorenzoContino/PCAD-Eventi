@@ -2,15 +2,17 @@ package com.eventi.eratostene;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.eventi.messaggi.EventMessage;
+
 public class Topic {
 
     private String topic_name;
-    private ConcurrentLinkedQueue<Integer> topic_data;
+    private ConcurrentLinkedQueue<EventMessage> topic_data;
     private boolean hasProducer = false;
     private boolean hasConsumer= false;
 
     protected Topic(String name){
-        topic_data = new ConcurrentLinkedQueue<Integer>();
+        topic_data = new ConcurrentLinkedQueue<EventMessage>();
         this.topic_name= name;
     }
 
@@ -38,7 +40,7 @@ public class Topic {
         return topic_name;
     }
 
-    public  ConcurrentLinkedQueue<Integer> getTopicData(){
+    public ConcurrentLinkedQueue<EventMessage> getTopicData(){
         return this.topic_data;
     }
       
