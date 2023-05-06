@@ -1,4 +1,4 @@
-package com.eventi.eratostene;
+package com.eventi.calvino;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 

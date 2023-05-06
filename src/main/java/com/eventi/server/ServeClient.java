@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.json.JSONObject;
 
-import com.eventi.eratostene.Subscriber;
+import com.eventi.calvino.Subscriber;
 
 public class ServeClient extends Subscriber implements Runnable{
 

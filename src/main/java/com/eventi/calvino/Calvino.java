@@ -1,9 +1,12 @@
-package com.eventi.eratostene;
+package com.eventi.calvino;
 
 import java.util.Map;
 import java.util.TreeMap;
 
-public final class Eratostene {
+import com.eventi.calvino.calvinoExceptions.TopicAlreadyHasConsumerException;
+import com.eventi.calvino.calvinoExceptions.TopicAlreadyHasProducerException;
+
+public final class Calvino {
 
     private static Map<String, Topic> topicMap;
     
@@ -37,13 +40,22 @@ public final class Eratostene {
                 topic.setHasConsumer(true);
                 return topic;
             }
-            throw new IllegalArgumentException("Topic ha già consumatore");
+            throw new TopicAlreadyHasConsumerException("Topic ha già consumatore");
         } else {
 
             Topic newTopic = generateTopic(topicName);
             newTopic.setHasConsumer(true);
             return newTopic;
 
+        }
+    }
+    
+    protected static synchronized Topic SubscribePeek(String topicName) {
+        if (topicMap.containsKey(topicName)) {
+            return topicMap.get(topicName);
+        } else {
+            Topic newTopic = generateTopic(topicName);
+            return newTopic;
         }
     }
 

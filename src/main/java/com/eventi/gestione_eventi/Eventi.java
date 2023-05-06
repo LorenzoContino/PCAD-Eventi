@@ -2,7 +2,7 @@ package com.eventi.gestione_eventi;
 
 import java.util.TreeMap;
 
-import com.eventi.eratostene.Subscriber;
+import com.eventi.calvino.Subscriber;
 
 import java.util.Map;
 
