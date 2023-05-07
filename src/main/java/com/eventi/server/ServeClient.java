@@ -1,6 +1,7 @@
 package com.eventi.server;
 
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +15,7 @@ import com.eventi.calvino.calvino_exceptions.SubscriberNotConsumerException;
 import com.eventi.calvino.calvino_exceptions.SubscriberNotProducerException;
 import com.eventi.messaggi.AddSeatsEventMessage;
 import com.eventi.messaggi.BookSeatsEventMessage;
+import com.eventi.messaggi.BroadcastEventsListMesage;
 import com.eventi.messaggi.CloseEventMessage;
 import com.eventi.messaggi.CreateEventMessage;
 import com.eventi.messaggi.EventMessage;
@@ -21,7 +23,7 @@ import com.eventi.messaggi.ListEventMessage;
 import com.eventi.messaggi.okResponse;
 
 
-public class ServeClient extends Subscriber implements Runnable{
+public class ServeClient extends Subscriber implements Runnable {
 
     public static final AtomicInteger id = new AtomicInteger(0);
     private final Integer my_id;
@@ -38,12 +40,13 @@ public class ServeClient extends Subscriber implements Runnable{
             var message = readJSON();
             EventMessage topicMessage;
             try {
-                topicMessage = hadleJSON(message);
+                topicMessage = handleJSON(message);
             } catch (Exception e) {
                 continue;
             }
             if(topicMessage instanceof ListEventMessage){
                 sendEventList();
+                continue;
             }
             for(;;){
                 try {
@@ -88,7 +91,7 @@ public class ServeClient extends Subscriber implements Runnable{
         return new JSONObject(recv_buffer);
     }
 
-    private EventMessage hadleJSON (JSONObject json) {
+    public EventMessage handleJSON (JSONObject json) {
         String role;
         JSONObject command;
         String eventName;
@@ -157,19 +160,65 @@ public class ServeClient extends Subscriber implements Runnable{
     }
 
     private void sendEventList(){
+        BroadcastEventsListMesage eventListMessage;
+        try {
+            eventListMessage = (BroadcastEventsListMesage)peek("topicEventsBroadcast");
+        } catch (Exception e) {
+            // TODO: handle exception
+            return;
+        }
+        String send_message = generateEventListJSON(eventListMessage);      
+        try(OutputStreamWriter out = new OutputStreamWriter(
+            clientSocket.getOutputStream(), StandardCharsets.UTF_8
+        )){
+            out.write(send_message);
+        } catch (Exception e){
+            //TODO - cazzi
+        }
+    }
 
+    public String generateEventListJSON(BroadcastEventsListMesage eventListMessage){
+        JSONObject resultJSON = new JSONObject();
+        for(var event : eventListMessage.getEventList().values()){
+            JSONObject aux = new JSONObject();
+            aux.put("name", event.getName());
+            aux.put("seats", event.getSeats());
+            aux.put("max_seats", event.getMaxSeats());
+            resultJSON.put(event.getName(), aux);
+        }
+        return resultJSON.toString();
     }
 
     private void sendEventOk(){
-        sendEvent(true);
+        String send_message = sendEventResponse(true);
+        try(OutputStreamWriter out = new OutputStreamWriter(
+            clientSocket.getOutputStream(), StandardCharsets.UTF_8
+        )){
+            out.write(send_message);
+        } catch (Exception e){
+            //TODO - cazzi
+        }
     }
 
     private void sendEventError(){
-        sendEvent(false);
+        String send_message = sendEventResponse(false);
+        try(OutputStreamWriter out = new OutputStreamWriter(
+            clientSocket.getOutputStream(), StandardCharsets.UTF_8
+        )){
+            out.write(send_message);
+        } catch (Exception e){
+            //TODO - cazzi
+        }
     }
 
-    private void sendEvent(boolean eventType){
-
+    private String sendEventResponse(boolean eventType){
+        JSONObject resultJSON = new JSONObject();
+        if(eventType){
+            resultJSON.put("result", "OK");
+        } else {
+            resultJSON.put("result", "ERROR");
+        }
+        return resultJSON.toString();
     }
 
     protected ServeClient(Socket clientSocket){

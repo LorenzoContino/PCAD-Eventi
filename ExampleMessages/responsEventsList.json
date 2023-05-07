@@ -1,0 +1,13 @@
+{
+    "pippo": {
+        "name": "pippo",
+        "seats": 20,
+        "max_seats": 200
+    },
+    "pluto": {
+        "name": "pluto",
+        "seats": 100,
+        "max_seats": 230
+    },
+    "paperino":{"name":"paperino","seats":10,"max_seats":12}
+}

@@ -24,11 +24,17 @@ public class Evento {
         return "Evento " + name + ", posti disponibili :" + seats;
     }
 
-    protected String getName() {
+    public String getName() {
         return name;
     }
 
+    public Integer getSeats() {
+        return seats;
+    }
 
+    public Integer getMaxSeats() {
+        return maxSeats;
+    }
 
     protected void addSeats(Integer addedSeats) {
 
