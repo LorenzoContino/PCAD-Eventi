@@ -1,0 +1,8 @@
+{
+    "role": "ADMIN",
+    "command": {
+        "type": "ADD",
+        "name": "FOO",
+        "seats": 345
+    }
+}

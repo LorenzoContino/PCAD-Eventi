@@ -20,6 +20,18 @@ public abstract class Subscriber {
     private Map<String, Topic> myPeeker   = new HashMap<>();
 
 
+    public Map<String, Topic> getMyProducer() {
+        return myProducer;
+    }
+
+    public Map<String, Topic> getMyConsumer() {
+        return myConsumer;
+    }
+
+    public Map<String, Topic> getMyPeeker() {
+        return myPeeker;
+    }
+
     public void SubscribeProd(String producer_name) throws SubscriberAlreadyProducerException, TopicAlreadyHasProducerException {
         if (this.myProducer.containsKey(producer_name)) {
             throw new SubscriberAlreadyProducerException("subscriber is already a producer");

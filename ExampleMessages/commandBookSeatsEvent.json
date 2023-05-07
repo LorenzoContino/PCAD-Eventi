@@ -1,0 +1,8 @@
+{
+    "role": "USER",
+    "command": {
+        "type": "BOOK",
+        "name": "FOO",
+        "seats": 345
+    }
+}

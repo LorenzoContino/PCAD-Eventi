@@ -2,6 +2,15 @@ package com.eventi.messaggi;
 
 public class ListEventMessage implements EventMessage{
     
-    public final String message = "List";
+    private final Integer clientId;
+
+
+    public ListEventMessage(Integer clientId) {
+        this.clientId = clientId;
+    }
+
+    public Integer getClientId() {
+        return clientId;
+    }
 
 }

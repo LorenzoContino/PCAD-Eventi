@@ -1,0 +1,6 @@
+{
+    "role": "USER",
+    "command": {
+        "type": "LIST"
+    }
+}

@@ -8,7 +8,7 @@ import com.eventi.messaggi.BroadcastEventsListMesage;
 import java.util.Map;
 
 
-public class Eventi extends Subscriber implements Runnable{    
+public class Eventi extends Subscriber implements Runnable {    
 
     private Map<String,Evento> eventList;
 

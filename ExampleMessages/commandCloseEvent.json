@@ -1,0 +1,7 @@
+{
+    "role": "ADMIN",
+    "command": {
+        "type": "CLOSE",
+        "name": "FOO"
+    }
+}
