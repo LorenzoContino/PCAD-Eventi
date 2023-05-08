@@ -32,10 +32,21 @@ public class ServeClient extends Subscriber implements Runnable {
 
     @Override
     public void run() {
-        serve();
+        try {
+            serve();
+        } catch (Exception e) {
+            System.out.println("SERVECLIENT: " + e.getMessage());
+        }
+        System.out.println("SERVECLIENT: Disconnecting from client.");
+        try {
+            clientSocket.close();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
     }
 
     private void serve(){
+        System.out.println("SERVECLIENT: Starting to serve client " + clientSocket.getInetAddress() + " on port " + clientSocket.getPort() + ".");
         while (clientSocket.isConnected() /* Finche il client non si disconnette */) {
             var message = readJSON();
             EventMessage topicMessage;
@@ -84,7 +95,7 @@ public class ServeClient extends Subscriber implements Runnable {
         CharBuffer recv_buffer = CharBuffer.allocate(1024);
         try (InputStreamReader in = new InputStreamReader(
             clientSocket.getInputStream(), StandardCharsets.UTF_8)){
-                var message_size = in.read(recv_buffer);
+                in.read(recv_buffer);
         } catch (Exception e) {
             throw new InvalidMessageException(e.getMessage());
         }
@@ -222,6 +233,7 @@ public class ServeClient extends Subscriber implements Runnable {
     }
 
     protected ServeClient(Socket clientSocket){
+        System.out.println("SERVECLIENT: New socket created to handle requests.");
         this.clientSocket = clientSocket;
         this.my_id = id.incrementAndGet();
         try {

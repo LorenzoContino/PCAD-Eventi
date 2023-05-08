@@ -21,6 +21,7 @@ public class Eventi extends Subscriber implements Runnable {
 
 
     public Eventi() {
+        System.out.println("EVENTS: Starting event handler.");
         this.eventList = new TreeMap<>();
     }
 
@@ -87,17 +88,17 @@ public class Eventi extends Subscriber implements Runnable {
     @Override
     public void run() {
         initializeTopics();
+        System.out.println("EVENTS: Start polling on topic.");;
+        boolean waiting = false;
         while(true){
-            EventMessage recv_message;
-            boolean waiting = false;
+            EventMessage recv_message = null;
             try {
                 recv_message = consume("topicEventMessages");
             } catch (Exception e) {
-                // TODO: comunico al mian che sono detonato
-                continue;
             }
             if(recv_message==null){
                 if(waiting){
+                    // System.out.println("EVENTS: polling for data.");;
                     try {
                         Thread.sleep(20); // aspettiamo per non fondere la CPU
                     } catch (Exception e) {
@@ -105,6 +106,7 @@ public class Eventi extends Subscriber implements Runnable {
                     }
                 } else {
                     waiting = true;
+                    continue;
                 }
             }
             waiting = false;

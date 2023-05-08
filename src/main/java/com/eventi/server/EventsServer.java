@@ -9,17 +9,20 @@ public class EventsServer{
     
     private ServerSocket socket;
 
+
     public void start(){
         initEventServerThreads();
+        System.out.println("SERVER: Starting server socket.");
         while (!socket.isClosed()) {
             Socket client_socket;
             try {
                 client_socket = socket.accept();
             } catch (Exception e) {    
                 System.out.println("Server error: " + e.getMessage());
-                return;
+                continue;
             }
-            new Thread(new ServeClient(client_socket));
+            System.out.println("SERVER: Connection recived.");
+            new Thread(new ServeClient(client_socket)).start();
         }
     }
 
@@ -32,7 +35,7 @@ public class EventsServer{
     }
 
     private void initEventServerThreads(){
-        new Thread(new Eventi());
+        new Thread(new Eventi()).start();
     }
 
 
