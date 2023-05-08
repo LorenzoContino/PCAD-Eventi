@@ -20,7 +20,7 @@ import com.eventi.messaggi.CloseEventMessage;
 import com.eventi.messaggi.CreateEventMessage;
 import com.eventi.messaggi.EventMessage;
 import com.eventi.messaggi.ListEventMessage;
-import com.eventi.messaggi.okResponse;
+import com.eventi.messaggi.OkResponse;
 
 
 public class ServeClient extends Subscriber implements Runnable {
@@ -72,7 +72,7 @@ public class ServeClient extends Subscriber implements Runnable {
             } catch (Exception e){
                 continue;
             }
-            if(response instanceof okResponse){
+            if(response instanceof OkResponse){
                 sendEventOk();
             } else {
                 sendEventError();

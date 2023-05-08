@@ -10,7 +10,7 @@ public class EventsServer{
     private ServerSocket socket;
 
     public void start(){
-        initMessageServer();
+        initEventServerThreads();
         while (!socket.isClosed()) {
             Socket client_socket;
             try {
@@ -31,7 +31,7 @@ public class EventsServer{
         }
     }
 
-    private void initMessageServer(){
+    private void initEventServerThreads(){
         new Thread(new Eventi());
     }
 
