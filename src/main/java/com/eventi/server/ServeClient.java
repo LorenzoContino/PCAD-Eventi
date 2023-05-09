@@ -1,10 +1,10 @@
 package com.eventi.server;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.nio.CharBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
@@ -28,6 +28,8 @@ public class ServeClient extends Subscriber implements Runnable {
     public static final AtomicInteger id = new AtomicInteger(0);
     private final Integer my_id;
     private Socket clientSocket; 
+    private BufferedWriter sockWriter;
+    private BufferedReader sockReader;
 
 
     @Override
@@ -69,7 +71,7 @@ public class ServeClient extends Subscriber implements Runnable {
             }
             EventMessage response;
             try { 
-                produce("topicEventMessage", topicMessage);
+                produce("topicEventMessages", topicMessage);
                 UnSubscribeProd("topicEventMessages");
                 synchronized(getMyConsumer().get("topic-"+my_id.toString())){
                     getMyConsumer().get("topic-"+my_id.toString()).wait();
@@ -92,10 +94,9 @@ public class ServeClient extends Subscriber implements Runnable {
     }
 
     private JSONObject readJSON() throws InvalidMessageException{
-        CharBuffer recv_buffer = CharBuffer.allocate(1024);
-        try (InputStreamReader in = new InputStreamReader(
-            clientSocket.getInputStream(), StandardCharsets.UTF_8)){
-                in.read(recv_buffer);
+        String recv_buffer;
+        try {
+            recv_buffer = sockReader.readLine();     
         } catch (Exception e) {
             throw new InvalidMessageException(e.getMessage());
         }
@@ -175,15 +176,14 @@ public class ServeClient extends Subscriber implements Runnable {
         try {
             eventListMessage = (BroadcastEventsListMesage)peek("topicEventsBroadcast");
         } catch (Exception e) {
-           
-            return;
+            throw new InvalidMessageException(e.getMessage());
         }
         String send_message = generateEventListJSON(eventListMessage);      
-        try(OutputStreamWriter out = new OutputStreamWriter(
-            clientSocket.getOutputStream(), StandardCharsets.UTF_8
-        )){
-            out.write(send_message);
-        } catch (Exception e){
+        try {
+            sockWriter.write(send_message);
+            sockWriter.newLine();
+            sockWriter.flush();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -202,22 +202,22 @@ public class ServeClient extends Subscriber implements Runnable {
 
     private void sendEventOk(){
         String send_message = sendEventResponse(true);
-        try(OutputStreamWriter out = new OutputStreamWriter(
-            clientSocket.getOutputStream(), StandardCharsets.UTF_8
-        )){
-            out.write(send_message);
-        } catch (Exception e){
+        try {
+            sockWriter.write(send_message);
+            sockWriter.newLine();
+            sockWriter.flush();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void sendEventError(){
         String send_message = sendEventResponse(false);
-        try(OutputStreamWriter out = new OutputStreamWriter(
-            clientSocket.getOutputStream(), StandardCharsets.UTF_8
-        )){
-            out.write(send_message);
-        } catch (Exception e){
+        try {
+            sockWriter.write(send_message);
+            sockWriter.newLine();
+            sockWriter.flush();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -237,6 +237,8 @@ public class ServeClient extends Subscriber implements Runnable {
         this.clientSocket = clientSocket;
         this.my_id = id.incrementAndGet();
         try {
+            sockReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            sockWriter = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             SubscribeCons("topic-"+my_id.toString());
             SubscribePeek("topicEventsBroadcast");
         } catch (Exception e) {
