@@ -79,6 +79,7 @@ public abstract class Subscriber {
     public void produce(String topicName, EventMessage message) throws SubscriberNotProducerException{
         if (myProducer.containsKey(topicName)) {
             myProducer.get(topicName).getTopicData().add(message);
+            return;
         }
         throw new SubscriberNotProducerException("subscriber is not a producer");
     }

@@ -79,11 +79,11 @@ public class ServeClient extends Subscriber implements Runnable {
                 response = consume("topic-"+my_id.toString());
             } catch (SubscriberNotProducerException e) {
                 e.printStackTrace();
-                continue;
+                return;
             } catch (SubscriberNotConsumerException e) {
-                continue;
+                return;
             } catch (Exception e){
-                continue;
+                return;
             }
             if(response instanceof OkResponse){
                 sendEventOk();
@@ -98,7 +98,10 @@ public class ServeClient extends Subscriber implements Runnable {
         try {
             recv_buffer = sockReader.readLine();     
         } catch (Exception e) {
-            throw new InvalidMessageException(e.getMessage());
+            throw new InvalidMessageException("Il socket e' chiuso");
+        }
+        if (recv_buffer == null){
+            throw new InvalidMessageException("Recived message is empty"); 
         }
         return new JSONObject(recv_buffer);
     }
