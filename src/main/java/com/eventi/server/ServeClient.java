@@ -235,6 +235,7 @@ public class ServeClient extends Subscriber implements Runnable {
         return resultJSON.toString();
     }
 
+
     protected ServeClient(Socket clientSocket){
         System.out.println("SERVECLIENT: New socket created to handle requests.");
         this.clientSocket = clientSocket;
