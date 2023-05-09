@@ -41,7 +41,7 @@ public class ServeClient extends Subscriber implements Runnable {
         try {
             clientSocket.close();
         } catch (Exception e) {
-            // TODO: handle exception
+            
         }
     }
 
@@ -76,7 +76,7 @@ public class ServeClient extends Subscriber implements Runnable {
                 }
                 response = consume("topic-"+my_id.toString());
             } catch (SubscriberNotProducerException e) {
-                // TODO: handle exception
+                e.printStackTrace();
                 continue;
             } catch (SubscriberNotConsumerException e) {
                 continue;
@@ -175,7 +175,7 @@ public class ServeClient extends Subscriber implements Runnable {
         try {
             eventListMessage = (BroadcastEventsListMesage)peek("topicEventsBroadcast");
         } catch (Exception e) {
-            // TODO: handle exception
+           
             return;
         }
         String send_message = generateEventListJSON(eventListMessage);      
@@ -184,7 +184,7 @@ public class ServeClient extends Subscriber implements Runnable {
         )){
             out.write(send_message);
         } catch (Exception e){
-            //TODO - cazzi
+            e.printStackTrace();
         }
     }
 
@@ -207,7 +207,7 @@ public class ServeClient extends Subscriber implements Runnable {
         )){
             out.write(send_message);
         } catch (Exception e){
-            //TODO - cazzi
+            e.printStackTrace();
         }
     }
 
@@ -218,7 +218,7 @@ public class ServeClient extends Subscriber implements Runnable {
         )){
             out.write(send_message);
         } catch (Exception e){
-            //TODO - cazzi
+            e.printStackTrace();
         }
     }
 

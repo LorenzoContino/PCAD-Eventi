@@ -3,14 +3,7 @@ package com.eventi.gestione_eventi;
 import java.util.TreeMap;
 
 import com.eventi.calvino.Subscriber;
-import com.eventi.messaggi.AddSeatsEventMessage;
-import com.eventi.messaggi.BookSeatsEventMessage;
 import com.eventi.messaggi.BroadcastEventsListMesage;
-import com.eventi.messaggi.CloseEventMessage;
-import com.eventi.messaggi.CreateEventMessage;
-import com.eventi.messaggi.ErrorResponse;
-import com.eventi.messaggi.EventMessage;
-import com.eventi.messaggi.OkResponse;
 
 import java.util.Map;
 
@@ -21,7 +14,6 @@ public class Eventi extends Subscriber implements Runnable {
 
 
     public Eventi() {
-        System.out.println("EVENTS: Starting event handler.");
         this.eventList = new TreeMap<>();
     }
 
@@ -52,6 +44,7 @@ public class Eventi extends Subscriber implements Runnable {
     public void listaEventi() {
         for (Evento evento : eventList.values()) {
             System.out.println( evento.toString());
+           
         }
     }
 
@@ -88,81 +81,6 @@ public class Eventi extends Subscriber implements Runnable {
     @Override
     public void run() {
         initializeTopics();
-        System.out.println("EVENTS: Start polling on topic.");;
-        boolean waiting = false;
-        while(true){
-            EventMessage recv_message = null;
-            try {
-                recv_message = consume("topicEventMessages");
-            } catch (Exception e) {
-            }
-            if(recv_message==null){
-                if(waiting){
-                    // System.out.println("EVENTS: polling for data.");;
-                    try {
-                        Thread.sleep(20); // aspettiamo per non fondere la CPU
-                    } catch (Exception e) {
-                        continue; // se non ti va la wait ti meriti che ti si fonda la CPU
-                    }
-                } else {
-                    waiting = true;
-                    continue;
-                }
-            }
-            waiting = false;
-            boolean handleMessageResult = true;
-            Integer clientId;
-            if (recv_message instanceof AddSeatsEventMessage) {
-                try {
-                    aggiungi(((AddSeatsEventMessage)recv_message).getEventName(), ((AddSeatsEventMessage)recv_message).getEventSeats());
-                    clientId = ((AddSeatsEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((AddSeatsEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof BookSeatsEventMessage){
-                try {
-                    prenota(((BookSeatsEventMessage)recv_message).getEventName(), ((BookSeatsEventMessage)recv_message).getEventSeats()); 
-                    clientId = ((BookSeatsEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((BookSeatsEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof CloseEventMessage){
-                try {
-                    chiudi(((CloseEventMessage)recv_message).getEventName());
-                    clientId = ((CloseEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((CloseEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof CreateEventMessage){
-                try {
-                    crea(((CreateEventMessage)recv_message).getEventName(), ((CreateEventMessage)recv_message).getEventSeats());
-                    clientId = ((CreateEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((CreateEventMessage)recv_message).getClientId();
-                }
-            } else {
-                continue;
-            }
-            updateEventTopic();
-            try {
-                SubscribeProd("topic-"+clientId.toString());
-                if(handleMessageResult){
-                    produce("topic-"+clientId.toString(), new OkResponse());
-                } else {
-                    produce("topic-"+clientId.toString(), new ErrorResponse());
-                }
-                synchronized(getMyProducer().get("topic-"+clientId.toString())){
-                    getMyProducer().get("topic-"+clientId.toString()).notifyAll();
-                }
-            } catch (Exception e) {
-                continue; 
-            }
-            
-        }
     }
 
 }
