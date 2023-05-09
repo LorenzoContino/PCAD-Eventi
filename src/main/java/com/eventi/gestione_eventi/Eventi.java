@@ -1,8 +1,12 @@
 package com.eventi.gestione_eventi;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TreeMap;
+
+import org.w3c.dom.events.Event;
 
 import com.eventi.calvino.Subscriber;
 import com.eventi.messaggi.AddSeatsEventMessage;
@@ -19,47 +23,112 @@ import com.eventi.messaggi.OkResponse;
 public class Eventi extends Subscriber implements Runnable {    
 
     private Map<String,Evento> eventList;
+    private Map<String, LinkedList<BookSeatsEventMessage>> pendigRequestsQueue;
 
 
     public Eventi() {
         this.eventList = new TreeMap<>();
+        pendigRequestsQueue = new HashMap<>();
     }
 
-    public void crea(String name, Integer seats) {
+    public void crea(CreateEventMessage eventMessage) {
+        String name = eventMessage.getEventName();
+        Integer seats = eventMessage.getEventSeats(); 
         if (this.containsEvent(name))
-            throw new IllegalArgumentException("L'evento che si intende creare è già esistente");
-        
-        eventList.put(name,new Evento(name, seats));
+            sendResponse(false, eventMessage.getClientId());
+        try {
+            eventList.put(name,new Evento(name, seats));
+        } catch (Exception e) {
+            sendResponse(false, eventMessage.getClientId());
+        }
+        updateEventTopic();
+        sendResponse(true, eventMessage.getClientId());
     }
 
-    public void aggiungi(String name, Integer seats) {
-       
+    public void aggiungi(AddSeatsEventMessage eventMessage) {
+        String name = eventMessage.getEventName();
+        Integer seats = eventMessage.getEventSeats(); 
         if(!this.containsEvent(name))
-            throw new IllegalArgumentException("Evento non esistente");
-        eventList.get(name).addSeats(seats);
-
+            sendResponse(false, eventMessage.getClientId());
+        try {
+            eventList.get(name).addSeats(seats);
+        } catch (Exception e) {
+            sendResponse(false, eventMessage.getClientId());
+        }
+        if(pendigRequestsQueue.containsKey(name)){
+            var aux = pendigRequestsQueue.get(name).element();
+            if(eventList.get(name).getSeats() > aux.getEventSeats()){
+                prenota(aux);
+            }
+        }
+        updateEventTopic();
+        sendResponse(true, eventMessage.getClientId());
     }
 
-    public void prenota(String name, Integer seats) {
-        
-       
+    public void prenota(BookSeatsEventMessage eventMessage) {
+        String name = eventMessage.getEventName();
+        Integer seats = eventMessage.getEventSeats();
         if(!this.containsEvent(name))
-            throw new IllegalArgumentException("Evento non esistente");
-        eventList.get(name).removeSeats(seats);
+            sendResponse(false, eventMessage.getClientId());
+        try {
+            eventList.get(name).removeSeats(seats);
+        } catch (ArgumentOutOfBoundException e) {
+            if (!pendigRequestsQueue.containsKey(name)) {
+                pendigRequestsQueue.put(name, new LinkedList<>());
+            }
+            pendigRequestsQueue.get(name).add(eventMessage);
+            return;
+        } catch (Exception e) {
+            sendResponse(false, eventMessage.getClientId());
+        }
+        updateEventTopic();
+        sendResponse(true, eventMessage.getClientId());
 
     }
 
-    public void listaEventi() {
+    /* DEBUG */ public void listaEventi() {
         for (Evento evento : eventList.values()) {
-            System.out.println( evento.toString());
-           
+            System.out.println( evento.toString()); 
         }
     }
 
-    public void chiudi(String name) { 
+    public void chiudi(CloseEventMessage eventMessage) { 
+        String name = eventMessage.getEventName();
         if(!this.containsEvent(name))
-            throw new IllegalArgumentException("L'evento che si intende chiudere non è esistente");
-        eventList.remove(name);       
+            sendResponse(false, eventMessage.getClientId());
+        try {
+            eventList.remove(name);       
+        } catch (Exception e) {
+            sendResponse(false, eventMessage.getClientId());
+        }
+        if(pendigRequestsQueue.containsKey(name)){
+            for (var messages : pendigRequestsQueue.get(name)) {
+                sendResponse(false, messages.getClientId());
+            }
+            pendigRequestsQueue.remove(name);
+        }
+        updateEventTopic();
+        sendResponse(true, eventMessage.getClientId());
+    }
+
+    public void sendResponse(boolean ok, Integer id){
+        EventMessage response;
+        if(ok){
+            response = new OkResponse();
+        } else {
+            response = new ErrorResponse();
+        }
+        try {
+            SubscribeProd("topic-"+id.toString());
+            produce("topic-"+id.toString(), response);
+            synchronized(getMyProducer().get("topic-"+id.toString())){
+                getMyProducer().get("topic-"+id.toString()).notifyAll();
+            }
+            UnSubscribeProd("topic-"+id.toString());
+        } catch (Exception e) {
+            System.out.println("EVENTS: Fatal error while sending messsages: " + e.getMessage());
+            System.exit(1);
+        }
     }
 
     private boolean containsEvent(String name) {
@@ -90,82 +159,38 @@ public class Eventi extends Subscriber implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("EVENTI: Starting event hadler thread");
+        System.out.println("EVENTS: Starting event hadler thread");
         initializeTopics();
-        System.out.println("EVENTI: Event start polling on topic");
+        System.out.println("EVENTS: Event start polling on topic");
+        boolean waiting = false;
         while(true){
-            EventMessage recv_message;
-            boolean waiting = false;
+            EventMessage recv_message = null;
             try {
                 recv_message = consume("topicEventMessages");
             } catch (Exception e) {
-                // TODO: comunico al mian che sono detonato
-                continue;
-            }
-            if(recv_message==null){
                 if(waiting){
                     try {
                         Thread.sleep(20); // aspettiamo per non fondere la CPU
-                    } catch (Exception e) {
+                    } catch (Exception ee) {
                         continue; // se non ti va la wait ti meriti che ti si fonda la CPU
                     }
                 } else {
                     waiting = true;
                 }
-            }
-            waiting = false;
-            boolean handleMessageResult = true;
-            Integer clientId;
-            if (recv_message instanceof AddSeatsEventMessage) {
-                try {
-                    aggiungi(((AddSeatsEventMessage)recv_message).getEventName(), ((AddSeatsEventMessage)recv_message).getEventSeats());
-                    clientId = ((AddSeatsEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((AddSeatsEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof BookSeatsEventMessage){
-                try {
-                    prenota(((BookSeatsEventMessage)recv_message).getEventName(), ((BookSeatsEventMessage)recv_message).getEventSeats()); 
-                    clientId = ((BookSeatsEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((BookSeatsEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof CloseEventMessage){
-                try {
-                    chiudi(((CloseEventMessage)recv_message).getEventName());
-                    clientId = ((CloseEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((CloseEventMessage)recv_message).getClientId();
-                }
-            } else if (recv_message instanceof CreateEventMessage){
-                try {
-                    crea(((CreateEventMessage)recv_message).getEventName(), ((CreateEventMessage)recv_message).getEventSeats());
-                    clientId = ((CreateEventMessage)recv_message).getClientId();
-                } catch (Exception e) {
-                    handleMessageResult = false;
-                    clientId = ((CreateEventMessage)recv_message).getClientId();
-                }
-            } else {
                 continue;
             }
-            updateEventTopic();
-            try {
-                SubscribeProd("topic-"+clientId.toString());
-                if(handleMessageResult){
-                    produce("topic-"+clientId.toString(), new OkResponse());
-                } else {
-                    produce("topic-"+clientId.toString(), new ErrorResponse());
-                }
-                synchronized(getMyProducer().get("topic-"+clientId.toString())){
-                    getMyProducer().get("topic-"+clientId.toString()).notifyAll();
-                }
-            } catch (Exception e) {
-                continue; 
+            waiting = false;
+            if (recv_message instanceof CreateEventMessage){
+                crea((CreateEventMessage)recv_message);
+            } else if (recv_message instanceof AddSeatsEventMessage) {
+                aggiungi((AddSeatsEventMessage) recv_message);
+            } else if (recv_message instanceof BookSeatsEventMessage) {
+                prenota((BookSeatsEventMessage)recv_message);
+            } else if (recv_message instanceof CloseEventMessage) {
+                chiudi((CloseEventMessage) recv_message);
+            } else {
+                System.out.println("EVENTS: Error while handeling message");
             }
-
         }
     }
 
