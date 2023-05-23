@@ -1,2 +1,2 @@
 #! /bin/bash
-docker build -t events:server .
+mvn clean compile assembly:single
