@@ -55,6 +55,7 @@ public class ServeClient extends Subscriber implements Runnable {
             try {
                 topicMessage = handleJSON(message);
             } catch (Exception e) {
+                sendEventError();
                 continue;
             }
             if(topicMessage instanceof ListEventMessage){
