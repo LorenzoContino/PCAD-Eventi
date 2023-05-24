@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import com.mysql.cj.xdevapi.PreparableStatement;
 
 public class EventiMySql {
 
@@ -80,6 +79,6 @@ public class EventiMySql {
     public static void /*TEST*/ main(String[] args) {
         var sql = new EventiMySql();
         var conn = sql.connectDatabase();
-        sql.eventCreate("che fine ha fatto mike bongiorno?", 1000);
+        // sql.eventCreate("che fine ha fatto mike bongiorno?", 1000);
     }
 }
