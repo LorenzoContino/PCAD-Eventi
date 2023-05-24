@@ -2,10 +2,10 @@ version: '3.7'
 
 services:
   
-  event_mysql:
-    build: ./database
-    image: event_mysql:dev
-    container_name: event_mysql
+  event-mysql:
+    build: ./../database
+    image: event-mysql:dev
+    container_name: event-mysql
     ports:
       - 3306:3306
     command: --default-authentication-plugin=mysql_native_password
@@ -14,21 +14,21 @@ services:
     cap_add:
       - SYS_NICE
 
-  event_server:
-    build: .
-    image: event_server:dev
-    container_name: event_server
+  event-server:
+    build: ./../
+    image: event-server:dev
+    container_name: event-server
     ports: 
       - 6000:6000
     depends_on:
-      - event_mysql
+      - event-mysql
 
   phpmyadmin:
     image: phpmyadmin:5-apache
     container_name: eventi_admin
     ports:
-      - 80:80
+      - 8000:80
     environment:
-      - PMA_HOST=event_database
+      - PMA_HOST=event-mysql
     depends_on:
-      - event_mysql
+      - event-mysql
